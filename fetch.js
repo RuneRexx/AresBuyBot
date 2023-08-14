@@ -1,5 +1,6 @@
 import Web3 from "web3";
 import { simpleBep20 } from "./simple-bep20.js";
+import cheerio from "cheerio";
 const web3 = new Web3("https://eth.llamarpc.com");
 const PAIR_ENDPOINT = "https://www.dextools.io/shared/search/pair?query=";
 
@@ -12,18 +13,44 @@ export const getPairAddress = (tokenAddress) => {
   );
 };
 
-export const getHolders = async (contractAddress, pairAddress) => {
-  const data = await fetch(`https://api.honeypot.is/v2/IsHoneypot?address=${contractAddress}&pair=${pairAddress}&chainID=1`).then(response => response.json())
-  const { holderAnalysis } = data
-  let holders;
-  if (holderAnalysis) {
-    const { holders: holdersNum } = holderAnalysis
-    holders = holdersNum
-  } else { holders = 1 }
-  return holders;
-}
+export const getHolders = async (address) => {
+  const url = `https://etherscan.io/token/generic-tokenholders2?m=light&a=${address}`;
 
-export const getTokenDetails = async (tokenAddress, pairAddress) => {
+  return fetch(url)
+    .then((response) => response.text())
+    .then((html) => {
+      const $ = cheerio.load(html);
+      const paragraph = $("p.mb-0:has(i#spinwheel)");
+
+      if (paragraph.length > 0) {
+        const span = paragraph.find("span");
+
+        if (span.length > 0) {
+          const spanText = span.text();
+          const noComma = spanText.replace(/,/g, "");
+          const numberOnly = noComma.match(/\d+/);
+          if (numberOnly) {
+            return Number(numberOnly[0])
+          }
+        } else {
+          const paragraphText = paragraph.text();
+          const noComma = paragraphText.replace(/,/g, "");
+          const numberOnly = noComma.match(/\d+/);
+          if (numberOnly) {
+            return Number(numberOnly[0])
+          }
+        }
+      } else {
+        console.log("Elemento <p> no encontrado.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+};
+
+
+export const getTokenDetails = async (tokenAddress) => {
   const tokenABI = simpleBep20; // Reemplaza con la ABI del contrato del token
   const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
   try {
@@ -33,7 +60,7 @@ export const getTokenDetails = async (tokenAddress, pairAddress) => {
     const name = await tokenContract.methods.name().call();
     const symbol = await tokenContract.methods.symbol().call();
     const decimals = Number(await tokenContract.methods.decimals().call());
-    const holders = await getHolders(tokenAddress, pairAddress);
+    const holders = await getHolders(tokenAddress);
     return { totalSupply, name, symbol, decimals, holders };
   } catch (error) {
     console.error("Error:", error);

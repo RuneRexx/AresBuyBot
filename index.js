@@ -137,7 +137,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
       } catch (error) {
         console.error("Error: ", error);
       }
-      tempUsers[userIdFromToken].settings.groupId = groupIdFromToken;
+      tempUsers[userIdFromToken].settings = defaultSettings((groupIdFromToken))
     }
     const inlineKeyboard = {
       reply_markup: {

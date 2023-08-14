@@ -1,6 +1,5 @@
 import Web3 from "web3";
 import { simpleBep20 } from "./simple-bep20.js";
-import cheerio from "cheerio";
 const web3 = new Web3("https://eth.llamarpc.com");
 const PAIR_ENDPOINT = "https://www.dextools.io/shared/search/pair?query=";
 
@@ -13,29 +12,18 @@ export const getPairAddress = (tokenAddress) => {
   );
 };
 
-export const getHolders = (address) => {
-  const url = `https://etherscan.io/token/${address}`;
+export const getHolders = async (contractAddress, pairAddress) => {
+  const data = await fetch(`https://api.honeypot.is/v2/IsHoneypot?address=${contractAddress}&pair=${pairAddress}&chainID=1`).then(response => response.json())
+  const { holderAnalysis } = data
+  let holders;
+  if (holderAnalysis) {
+    const { holders: holdersNum } = holderAnalysis
+    holders = holdersNum
+  } else { holders = 1 }
+  return holders;
+}
 
-  return fetch(url)
-    .then((response) => response.text())
-    .then((html) => {
-      const $ = cheerio.load(html);
-      const holdersDiv = $("#ContentPlaceHolder1_tr_tokenHolders");
-      const holdersValue = holdersDiv
-        .find("div.d-flex div")
-        .first()
-        .text()
-        .trim()
-        .replace(",", "");
-      const temp = holdersValue.split(" ");
-      return Number(temp[0]);
-    })
-    .catch((error) => {
-      console.error("Error al obtener la página:", error);
-    });
-};
-
-export const getTokenDetails = async (tokenAddress) => {
+export const getTokenDetails = async (tokenAddress, pairAddress) => {
   const tokenABI = simpleBep20; // Reemplaza con la ABI del contrato del token
   const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
   try {
@@ -45,7 +33,7 @@ export const getTokenDetails = async (tokenAddress) => {
     const name = await tokenContract.methods.name().call();
     const symbol = await tokenContract.methods.symbol().call();
     const decimals = Number(await tokenContract.methods.decimals().call());
-    const holders = await getHolders(tokenAddress);
+    const holders = await getHolders(tokenAddress, pairAddress);
     return { totalSupply, name, symbol, decimals, holders };
   } catch (error) {
     console.error("Error:", error);

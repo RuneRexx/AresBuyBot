@@ -422,7 +422,7 @@ bot.on("callback_query", async (callbackQuery) => {
         tempUsers[userId].settings.pairId = pairAddress;
         let token;
         const { totalSupply, name, symbol, decimals, holders } =
-          await getTokenDetails(tempUsers[userId].settings.tokenAddress);
+          await getTokenDetails(tempUsers[userId].settings.tokenAddress, data);
         try {
           token = await Token.create({
             address: tempUsers[userId].settings.tokenAddress,
@@ -1340,7 +1340,7 @@ async function handleData(data, settings) {
     const priceUsd = parseFloat(priceUsdTotal).toFixed(2);
     const numberOfEmojis = Math.floor(priceUsdTotal / step);
     if (event.eventDisplayType == "Buy" && event.data.priceUsdTotal >= minBuy) {
-      const holders = await getHolders(address);
+      const holders = await getHolders(address, pair);
       const { isNew, tokenBalance } = await checkHolder(
         maker,
         address,
@@ -1447,7 +1447,6 @@ ${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${
 
 const runBuyBot = async (settings) => {
   const customGql = gql(settings.tokenId.pair);
-  console.log(settings);
   const unsubscribe = await definedWs.subscribe(customGql, {
     async next(data) {
       handleData(data, settings);

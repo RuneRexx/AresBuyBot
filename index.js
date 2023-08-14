@@ -137,7 +137,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
       } catch (error) {
         console.error("Error: ", error);
       }
-      tempUsers[userIdFromToken].settings = defaultSettings((groupIdFromToken))
+      tempUsers[userIdFromToken].settings = defaultSettings(groupIdFromToken);
     }
     const inlineKeyboard = {
       reply_markup: {
@@ -145,15 +145,15 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
           [{ text: "Add Token Address", callback_data: "Add Token Address" }],
           tokensSet > 0
             ? [
-              {
-                text: "Check Token Settings",
-                callback_data: "Check Token Settings",
-              },
-            ]
+                {
+                  text: "Check Token Settings",
+                  callback_data: "Check Token Settings",
+                },
+              ]
             : [],
         ],
       },
-      parse_mode: "HTML"
+      parse_mode: "HTML",
     };
 
     bot
@@ -244,11 +244,12 @@ bot.onText(/\/addToken/, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const groupId = msg.chat.id;
-  const status = await bot.getChatMember(msg.chat.id, msg.from.id).then(function (data) {
-    return data.status
-  })
-  const isAdmin =
-    status === "creator" || status === "administrator";
+  const status = await bot
+    .getChatMember(msg.chat.id, msg.from.id)
+    .then(function (data) {
+      return data.status;
+    });
+  const isAdmin = status === "creator" || status === "administrator";
   if (msg.chat.type === "private") {
     return;
   }
@@ -433,7 +434,7 @@ bot.on("callback_query", async (callbackQuery) => {
             holders: holders,
           });
           const tokenDB = await token.save();
-          tempUsers[userId].settings.tokenId = tokenDB._id;
+          tempUsers[userId].settings.tokenId = tokenDB;
         } catch (error) {
           console.error("Error: ", error);
         }
@@ -1167,12 +1168,13 @@ const handleEditAd = async (ad, adId, userId, chatId) => {
     actionButton = ad.isActive ? "Pause" : "Resume";
   }
 
-  const editMessage = `Editing ad: ${ad.tokenName}\n\nActual text: ${ad.text
-    }\nStart Time: ${ad.startTime.toLocaleString("en-GB", {
-      timeZone: "UTC",
-    })}\nEnd Time: ${ad.endTime.toLocaleString("en-GB", {
-      timeZone: "UTC",
-    })}\nRunning: ${ad.isActive ? "YES" : "NO"}`;
+  const editMessage = `Editing ad: ${ad.tokenName}\n\nActual text: ${
+    ad.text
+  }\nStart Time: ${ad.startTime.toLocaleString("en-GB", {
+    timeZone: "UTC",
+  })}\nEnd Time: ${ad.endTime.toLocaleString("en-GB", {
+    timeZone: "UTC",
+  })}\nRunning: ${ad.isActive ? "YES" : "NO"}`;
 
   const keyboard = {
     inline_keyboard: [
@@ -1248,8 +1250,9 @@ const parseMarketCap = (marketCap) => {
     i++;
   }
   const decimals = Math.max(5 - Math.floor(marketCap).toString().length, 0);
-  const result = `${parseFloat(marketCap.toFixed(decimals)).toString()}${units[i]
-    }`;
+  const result = `${parseFloat(marketCap.toFixed(decimals)).toString()}${
+    units[i]
+  }`;
   return result;
 };
 
@@ -1316,9 +1319,11 @@ async function handleData(data, settings) {
   const { socialLinks } = settings;
   const { Telegram, Twitter, Website } = socialLinks;
   const { name, symbol, decimals, address, pair } = token;
-  const socialLinksText = `${Website ? `<a href="${Website}"><b>Website</b></a>  ` : ""
-    }${Telegram ? `<a href="${Telegram}"><b>Telegram</b></a>  ` : ""}${Twitter ? `<a href="${Twitter}"><b>Twitter</b></a>` : ""
-    }`;
+  const socialLinksText = `${
+    Website ? `<a href="${Website}"><b>Website</b></a>  ` : ""
+  }${Telegram ? `<a href="${Telegram}"><b>Telegram</b></a>  ` : ""}${
+    Twitter ? `<a href="${Twitter}"><b>Twitter</b></a>` : ""
+  }`;
   const {
     groupId,
     minBuy,
@@ -1343,25 +1348,28 @@ async function handleData(data, settings) {
       );
       const { price, marketCap } = await getPairInfo(pair);
       const textMessage = `${name} <b>BUY ALERT!</b>
-${numberOfEmojis >= 1 && numberOfEmojis <= 100
-          ? emoji.repeat(numberOfEmojis)
-          : numberOfEmojis > 100
-            ? emoji.repeat(100)
-            : emoji
-        }
+${
+  numberOfEmojis >= 1 && numberOfEmojis <= 100
+    ? emoji.repeat(numberOfEmojis)
+    : numberOfEmojis > 100
+    ? emoji.repeat(100)
+    : emoji
+}
 💶 <b>Bought:</b> $${priceUsd} (${priceBaseTokenTotal}ETH)
-🪙 <b>Got:</b> ${tokenBalance} ${symbol} ${tokenBalance === 0 ? "<--- MEV Bot" : ""
-        }
+🪙 <b>Got:</b> ${tokenBalance} ${symbol} ${
+        tokenBalance === 0 ? "<--- MEV Bot" : ""
+      }
 🔲 <b>Buyer:</b> <a href="https://etherscan.io/address/${maker}"> ${shortenWalletAddress(
-          maker
-        )}</a> | <a href="https://etherscan.io/tx/${transactionHash}">Txn</a>
+        maker
+      )}</a> | <a href="https://etherscan.io/tx/${transactionHash}">Txn</a>
 🔄 <b>Holder Count:</b> ${holders}
 ${isNew ? "✅ <b>New Holder!</b>\n" : ""}
 📈 <b>Price:</b> $${parsePrice(price)}
 📊 <b>MarketCap:</b> ${parseMarketCap(marketCap)}
 ${await randomAd()}
-${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${chartAddress[charts]
-        }${pair}"><b>Chart</b></a> | <a href="https://app.uniswap.org/#/tokens/ethereum/${address}"><b>UniSwap</b></a> | <a href="https://t.me/ares_trading_bot"><b>Ares Bot</b></a>`;
+${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${
+        chartAddress[charts]
+      }${pair}"><b>Chart</b></a> | <a href="https://app.uniswap.org/#/tokens/ethereum/${address}"><b>UniSwap</b></a> | <a href="https://t.me/ares_trading_bot"><b>Ares Bot</b></a>`;
 
       const sanitizedText = sanitizeText(textMessage);
 
@@ -1377,23 +1385,28 @@ ${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${chartAddress[charts]
         } catch (error) {
           if (error.response && error.response.body.error_code == 403) {
             try {
-              const userDb = await User.findOne({ tokensSet: settings._id })
+              const userDb = await User.findOne({ tokensSet: settings._id });
               if (userDb && userDb.tokensSet.includes(settings._id)) {
                 const index = userDb.tokensSet.indexOf(settings._id);
                 if (index !== -1) {
                   userDb.tokensSet.splice(index, 1);
                 }
               }
-              try{
+              try {
                 await Settings.findByIdAndDelete(settings._id);
-              } catch{console.log("error deleting settings from DB")}
-              await tempRunning[userDb.userId][settings.tokenId._id]()
-              userDb.save()
+              } catch {
+                console.log("error deleting settings from DB");
+              }
+              await tempRunning[userDb.userId][settings.tokenId._id]();
+              userDb.save();
             } catch (error) {
-              console.error("Error deleting tokensSet from User")
+              console.error("Error deleting tokensSet from User");
             }
           }
-          console.error("Error sending photo:", error.response.body.description);
+          console.error(
+            "Error sending photo:",
+            error.response.body.description
+          );
         }
       } else {
         try {
@@ -1404,23 +1417,28 @@ ${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${chartAddress[charts]
         } catch (error) {
           if (error.response && error.response.body.error_code == 403) {
             try {
-              const userDb = await User.findOne({ tokensSet: settings._id })
+              const userDb = await User.findOne({ tokensSet: settings._id });
               if (userDb && userDb.tokensSet.includes(settings._id)) {
                 const index = userDb.tokensSet.indexOf(settings._id);
                 if (index !== -1) {
                   userDb.tokensSet.splice(index, 1);
                 }
               }
-              try{
+              try {
                 await Settings.findByIdAndDelete(settings._id);
-              } catch{console.log("error deleting settings from DB")}
-              await tempRunning[userDb.userId][settings.tokenId._id]()
-              userDb.save()
+              } catch {
+                console.log("error deleting settings from DB");
+              }
+              await tempRunning[userDb.userId][settings.tokenId._id]();
+              userDb.save();
             } catch (error) {
-              console.error("Error deleting tokensSet from User")
+              console.error("Error deleting tokensSet from User");
             }
           }
-          console.error("Error sending message:", error.response.body.description);
+          console.error(
+            "Error sending message:",
+            error.response.body.description
+          );
         }
       }
     }
@@ -1429,6 +1447,7 @@ ${socialLinksText ? `${socialLinksText}\n` : ""}<a href="${chartAddress[charts]
 
 const runBuyBot = async (settings) => {
   const customGql = gql(settings.tokenId.pair);
+  console.log(settings);
   const unsubscribe = await definedWs.subscribe(customGql, {
     async next(data) {
       handleData(data, settings);

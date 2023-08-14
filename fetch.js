@@ -75,6 +75,7 @@ export const checkHolder = async (buyer, tokenAddress, decimals) => {
           Number(balanceBeforeLastTx)) *
         100;
     }
+    console.log(isNew, tokenBalance, percentage)
     return { isNew, tokenBalance, percentage };
   } catch (error) {
     console.error("Error al verificar el saldo de tokens:", error);
